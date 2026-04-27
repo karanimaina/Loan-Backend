@@ -1,13 +1,13 @@
 package com.ezra.loanbackend.service;
 
-import com.ezra.loanbackend.domain.FeeTrigger;
-import com.ezra.loanbackend.domain.FeeType;
+import com.ezra.loanbackend.constants.FeeTrigger;
+import com.ezra.loanbackend.constants.FeeType;
 import com.ezra.loanbackend.domain.Loan;
 import com.ezra.loanbackend.domain.LoanFeeCharge;
 import com.ezra.loanbackend.domain.LoanInstallment;
-import com.ezra.loanbackend.domain.LoanStructure;
+import com.ezra.loanbackend.constants.LoanStructure;
 import com.ezra.loanbackend.domain.ProductFeeConfiguration;
-import com.ezra.loanbackend.domain.ServiceFeeTiming;
+import com.ezra.loanbackend.constants.ServiceFeeTiming;
 import com.ezra.loanbackend.repository.LoanFeeChargeRepository;
 import com.ezra.loanbackend.repository.LoanInstallmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +27,12 @@ public class FeeService {
     private final LoanInstallmentRepository installmentRepository;
 
     @Transactional
-    public LoanFeeCharge applyServiceFeeAtOrigination(Loan loan, LocalDate asOf) {
-        ProductFeeConfiguration cfg = feeConfig(loan);
-        if (cfg == null || cfg.getServiceFeeTiming() != ServiceFeeTiming.AT_ORIGINATION) {
+    public LoanFeeCharge applyServiceFeeAtOrigination(Loan loan, LocalDate localDate) {
+        ProductFeeConfiguration config = feeConfig(loan);
+        if (config == null || config.getServiceFeeTiming() != ServiceFeeTiming.AT_ORIGINATION) {
             return null;
         }
-        BigDecimal fee = computeServiceFeeAmount(loan.getPrincipalAmount(), cfg);
+        BigDecimal fee = computeServiceFeeAmount(loan.getPrincipalAmount(), config);
         if (fee.compareTo(BigDecimal.ZERO) <= 0) {
             return null;
         }
@@ -48,7 +48,7 @@ public class FeeService {
                 .loan(loan)
                 .feeType(FeeType.SERVICE)
                 .amount(fee)
-                .appliedDate(asOf)
+                .appliedDate(localDate)
                 .trigger(FeeTrigger.ORIGINATION)
                 .description("Service fee at origination")
                 .createdAt(Instant.now())
@@ -58,8 +58,8 @@ public class FeeService {
 
     @Transactional
     public LoanFeeCharge applyDailyFeeForDay(Loan loan, LocalDate day) {
-        ProductFeeConfiguration cfg = feeConfig(loan);
-        if (cfg == null || cfg.getDailyFeeRateOnBalance() == null) {
+        ProductFeeConfiguration config = feeConfig(loan);
+        if (config == null || config.getDailyFeeRateOnBalance() == null) {
             return null;
         }
         if (day.equals(loan.getLastDailyFeeAccrualDate())) {
@@ -68,7 +68,7 @@ public class FeeService {
         if (loan.getOutstandingBalance().compareTo(BigDecimal.ZERO) <= 0) {
             return null;
         }
-        BigDecimal rate = cfg.getDailyFeeRateOnBalance();
+        BigDecimal rate = config.getDailyFeeRateOnBalance();
         BigDecimal fee = loan.getOutstandingBalance().multiply(rate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
         if (fee.compareTo(BigDecimal.ZERO) <= 0) {
             return null;
@@ -87,9 +87,6 @@ public class FeeService {
         return feeChargeRepository.save(charge);
     }
 
-    /**
-     * Late fee when days past due exceeds configured grace (per product snapshot).
-     */
     @Transactional
     public LoanFeeCharge applyLateFeeIfDue(Loan loan, LocalDate today) {
         ProductFeeConfiguration cfg = feeConfig(loan);

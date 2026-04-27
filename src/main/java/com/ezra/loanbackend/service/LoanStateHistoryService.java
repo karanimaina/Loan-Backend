@@ -1,7 +1,7 @@
 package com.ezra.loanbackend.service;
 
 import com.ezra.loanbackend.domain.Loan;
-import com.ezra.loanbackend.domain.LoanState;
+import com.ezra.loanbackend.constants.LoanState;
 import com.ezra.loanbackend.domain.LoanStateHistory;
 import com.ezra.loanbackend.repository.LoanStateHistoryRepository;
 import lombok.RequiredArgsConstructor;

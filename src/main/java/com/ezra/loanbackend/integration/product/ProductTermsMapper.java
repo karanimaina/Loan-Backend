@@ -7,7 +7,7 @@ public final class ProductTermsMapper {
     private ProductTermsMapper() {
     }
 
-    public static OriginatedProductTerms fromRemote(RemoteLoanProductDto product) {
+    public static OriginatedProductTerms fromRemote(Product product) {
         return OriginatedProductTerms.builder()
                 .tenureType(product.tenureType())
                 .tenureValue(product.tenureValue())

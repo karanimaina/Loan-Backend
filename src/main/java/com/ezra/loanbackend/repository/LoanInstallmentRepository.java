@@ -2,7 +2,7 @@ package com.ezra.loanbackend.repository;
 
 import com.ezra.loanbackend.domain.Loan;
 import com.ezra.loanbackend.domain.LoanInstallment;
-import com.ezra.loanbackend.domain.LoanState;
+import com.ezra.loanbackend.constants.LoanState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

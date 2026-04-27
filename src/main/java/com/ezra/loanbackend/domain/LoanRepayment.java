@@ -1,5 +1,6 @@
 package com.ezra.loanbackend.domain;
 
+import com.ezra.loanbackend.constants.RepaymentChannel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

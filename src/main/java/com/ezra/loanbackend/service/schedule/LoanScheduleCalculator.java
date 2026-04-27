@@ -1,7 +1,7 @@
 package com.ezra.loanbackend.service.schedule;
 
 import com.ezra.loanbackend.domain.OriginatedProductTerms;
-import com.ezra.loanbackend.domain.TenureType;
+import com.ezra.loanbackend.constants.TenureType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

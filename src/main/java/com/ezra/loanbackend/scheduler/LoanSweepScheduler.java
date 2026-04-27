@@ -1,10 +1,11 @@
 package com.ezra.loanbackend.scheduler;
 
+import com.ezra.loanbackend.constants.InstallmentState;
 import com.ezra.loanbackend.domain.Loan;
 import com.ezra.loanbackend.domain.LoanInstallment;
-import com.ezra.loanbackend.domain.LoanState;
-import com.ezra.loanbackend.domain.LoanStructure;
-import com.ezra.loanbackend.domain.NotificationEventType;
+import com.ezra.loanbackend.constants.LoanState;
+import com.ezra.loanbackend.constants.LoanStructure;
+import com.ezra.loanbackend.constants.NotificationEventType;
 import com.ezra.loanbackend.notification.LoanNotificationPublisher;
 import com.ezra.loanbackend.repository.LoanInstallmentRepository;
 import com.ezra.loanbackend.repository.LoanRepository;
@@ -63,7 +64,7 @@ public class LoanSweepScheduler {
         loan.setUpdatedAt(Instant.now());
         for (LoanInstallment ins : installmentRepository.findByLoanIdOrderByInstallmentNumber(loan.getId())) {
             if (ins.getDueDate().isBefore(today) && ins.getOutstandingAmount().signum() > 0) {
-                ins.setState(com.ezra.loanbackend.domain.InstallmentState.OVERDUE);
+                ins.setState(InstallmentState.OVERDUE);
                 installmentRepository.save(ins);
             }
         }

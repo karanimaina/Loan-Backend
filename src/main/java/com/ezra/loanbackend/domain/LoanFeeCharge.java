@@ -1,5 +1,7 @@
 package com.ezra.loanbackend.domain;
 
+import com.ezra.loanbackend.constants.FeeTrigger;
+import com.ezra.loanbackend.constants.FeeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

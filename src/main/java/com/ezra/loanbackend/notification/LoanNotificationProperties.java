@@ -9,9 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "loan.notifications")
 public class LoanNotificationProperties {
 
-    /** Disable outbound notifications (e.g. tests without Kafka). */
     private boolean enabled = true;
-
-    /** Kafka topic consumed by the Notification service. */
     private String topic = "loan.notifications";
 }

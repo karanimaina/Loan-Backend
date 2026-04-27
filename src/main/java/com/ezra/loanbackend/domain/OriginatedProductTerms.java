@@ -1,5 +1,6 @@
 package com.ezra.loanbackend.domain;
 
+import com.ezra.loanbackend.constants.TenureType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -11,9 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Snapshot of product terms and fees at loan origination (sourced from Product Service).
- */
 @Embeddable
 @Getter
 @Setter

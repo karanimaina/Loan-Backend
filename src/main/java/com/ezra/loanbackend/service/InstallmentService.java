@@ -1,9 +1,9 @@
 package com.ezra.loanbackend.service;
 
-import com.ezra.loanbackend.domain.InstallmentState;
+import com.ezra.loanbackend.constants.InstallmentState;
 import com.ezra.loanbackend.domain.Loan;
 import com.ezra.loanbackend.domain.LoanInstallment;
-import com.ezra.loanbackend.domain.LoanStructure;
+import com.ezra.loanbackend.constants.LoanStructure;
 import com.ezra.loanbackend.repository.LoanInstallmentRepository;
 import com.ezra.loanbackend.service.schedule.LoanScheduleCalculator;
 import lombok.RequiredArgsConstructor;

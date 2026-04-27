@@ -1,5 +1,8 @@
 package com.ezra.loanbackend.domain;
 
+import com.ezra.loanbackend.constants.BillingCycleType;
+import com.ezra.loanbackend.constants.LoanState;
+import com.ezra.loanbackend.constants.LoanStructure;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -35,11 +38,9 @@ public class Loan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** External Customer Service identifier. */
     @Column(name = "customer_id", nullable = false)
     private Long customerId;
 
-    /** External Product Service identifier. */
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
@@ -54,7 +55,6 @@ public class Loan {
 
     private LocalDate disbursementDate;
 
-    /** Primary maturity / next billing date for lump-sum or group-aligned loans. */
     private LocalDate dueDate;
 
     @Enumerated(EnumType.STRING)
@@ -81,7 +81,5 @@ public class Loan {
 
     @Column(nullable = false)
     private Instant updatedAt;
-
-    /** Last date daily fee was accrued (for idempotency per day). */
     private LocalDate lastDailyFeeAccrualDate;
 }

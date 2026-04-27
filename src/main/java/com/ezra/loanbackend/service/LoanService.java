@@ -1,24 +1,23 @@
 package com.ezra.loanbackend.service;
 
-import com.ezra.loanbackend.domain.BillingCycleType;
+import com.ezra.loanbackend.constants.*;
 import com.ezra.loanbackend.domain.ConsolidatedBillingGroup;
 import com.ezra.loanbackend.domain.Loan;
 import com.ezra.loanbackend.domain.LoanInstallment;
-import com.ezra.loanbackend.domain.LoanState;
-import com.ezra.loanbackend.domain.LoanStructure;
-import com.ezra.loanbackend.domain.NotificationEventType;
 import com.ezra.loanbackend.domain.OriginatedProductTerms;
-import com.ezra.loanbackend.integration.customer.CustomerServiceGateway;
-import com.ezra.loanbackend.integration.customer.RemoteCustomerDto;
-import com.ezra.loanbackend.integration.product.ProductServiceGateway;
+import com.ezra.loanbackend.integration.customer.Customer;
+import com.ezra.loanbackend.integration.customer.CustomerService;
+import com.ezra.loanbackend.integration.product.Product;
+import com.ezra.loanbackend.integration.product.ProductService;
+import com.ezra.loanbackend.exceptions.LoanException;
 import com.ezra.loanbackend.integration.product.ProductTermsMapper;
-import com.ezra.loanbackend.integration.product.RemoteLoanProductDto;
 import com.ezra.loanbackend.notification.LoanNotificationPublisher;
 import com.ezra.loanbackend.repository.ConsolidatedBillingGroupRepository;
 import com.ezra.loanbackend.repository.LoanInstallmentRepository;
 import com.ezra.loanbackend.repository.LoanRepository;
 import com.ezra.loanbackend.service.schedule.LoanScheduleCalculator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +29,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LoanService {
 
     private final LoanRepository loanRepository;
@@ -39,11 +39,11 @@ public class LoanService {
     private final FeeService feeService;
     private final LoanStateHistoryService historyService;
     private final LoanNotificationPublisher notificationPublisher;
-    private final CustomerServiceGateway customerServiceGateway;
-    private final ProductServiceGateway productServiceGateway;
+    private final CustomerService customerService;
+    private final ProductService productService;
 
     @Transactional
-    public Loan originate(
+    public Loan createCustomerLoan(
             Long customerId,
             Long productId,
             BigDecimal principalAmount,
@@ -53,16 +53,18 @@ public class LoanService {
             Long consolidatedBillingGroupId,
             LocalDate newGroupNextDueDate,
             String consolidatedGroupLabel) {
-        RemoteCustomerDto customer = customerServiceGateway.getCustomer(customerId);
-        RemoteLoanProductDto product = productServiceGateway.getProduct(productId);
+        Customer customer = customerService.getCustomer(customerId);
+        Product product = productService.getProduct(productId);
         if (!product.active()) {
-            throw new IllegalStateException("Product is inactive");
+            throw LoanException.conflict("Product is inactive");
         }
 
-        BigDecimal current = loanRepository.sumOutstandingForCustomer(customerId,
+       BigDecimal current = loanRepository.sumOutstandingForCustomer(customerId,
                 List.of(LoanState.OPEN, LoanState.OVERDUE));
+
+
         if (current.add(principalAmount).compareTo(customer.loanLimitAmount()) > 0) {
-            throw new IllegalStateException("Principal exceeds customer loan limit");
+            throw LoanException.conflict("Principal exceeds customer loan limit");
         }
 
         OriginatedProductTerms terms = ProductTermsMapper.fromRemote(product);
@@ -71,9 +73,9 @@ public class LoanService {
         if (billingCycleType == BillingCycleType.CONSOLIDATED) {
             if (consolidatedBillingGroupId != null) {
                 group = billingGroupRepository.findById(consolidatedBillingGroupId)
-                        .orElseThrow(() -> new IllegalArgumentException("Billing group not found"));
+                        .orElseThrow(() -> LoanException.notFound("Billing group not found"));
                 if (!group.getCustomerId().equals(customerId)) {
-                    throw new IllegalStateException("Billing group does not belong to this customer");
+                    throw LoanException.conflict("Billing group does not belong to this customer");
                 }
             } else if (newGroupNextDueDate != null) {
                 group = billingGroupRepository.save(ConsolidatedBillingGroup.builder()
@@ -83,7 +85,7 @@ public class LoanService {
                         .createdAt(Instant.now())
                         .build());
             } else {
-                throw new IllegalArgumentException("Consolidated billing requires a group id or newGroupNextDueDate");
+                throw LoanException.badRequest("Consolidated billing requires a group id or newConsolidatedGroupNextDueDate");
             }
         }
 
@@ -125,17 +127,22 @@ public class LoanService {
         reconcileInstallmentOutstanding(loan);
 
         historyService.record(loan, LoanState.OPEN, null);
-        notificationPublisher.publish(NotificationEventType.LOAN_CREATED, customerId, loan);
-        notificationPublisher.publish(NotificationEventType.DISBURSEMENT, customerId, loan);
+        try {
+            notificationPublisher.publish(NotificationEventType.LOAN_CREATED, customerId, loan);
+            notificationPublisher.publish(NotificationEventType.DISBURSEMENT, customerId, loan);
+        } catch (Exception ex) {
+            // Loan creation remains successful even if async notification publishing is unavailable.
+            log.warn("Loan {} created but notification publish failed: {}", loan.getId(), ex.getMessage());
+        }
         return loanRepository.save(loan);
     }
 
     @Transactional
     public Loan cancel(Long loanId, String reason) {
         Loan loan = loanRepository.findById(loanId)
-                .orElseThrow(() -> new IllegalArgumentException("Loan not found"));
+                .orElseThrow(() -> LoanException.notFound("Loan not found"));
         if (loan.getState() != LoanState.OPEN && loan.getState() != LoanState.OVERDUE) {
-            throw new IllegalStateException("Loan cannot be cancelled in state " + loan.getState());
+            throw LoanException.conflict("Loan cannot be cancelled in state " + loan.getState());
         }
         loan.setState(LoanState.CANCELLED);
         loan.setCancellationReason(reason);

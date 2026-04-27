@@ -22,19 +22,16 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class ConsolidatedBillingGroup {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** External Customer Service identifier. */
     @Column(name = "customer_id", nullable = false)
     private Long customerId;
 
     @Column(length = 120)
     private String label;
 
-    /** Shared due date for all loans in this group. */
     @Column(nullable = false)
     private LocalDate nextDueDate;
 

@@ -1,15 +1,16 @@
 package com.ezra.loanbackend.service;
 
-import com.ezra.loanbackend.domain.AllocationType;
-import com.ezra.loanbackend.domain.InstallmentState;
+import com.ezra.loanbackend.constants.AllocationType;
+import com.ezra.loanbackend.constants.InstallmentState;
 import com.ezra.loanbackend.domain.Loan;
 import com.ezra.loanbackend.domain.LoanInstallment;
 import com.ezra.loanbackend.domain.LoanRepayment;
-import com.ezra.loanbackend.domain.LoanState;
-import com.ezra.loanbackend.domain.LoanStructure;
-import com.ezra.loanbackend.domain.NotificationEventType;
+import com.ezra.loanbackend.constants.LoanState;
+import com.ezra.loanbackend.constants.LoanStructure;
+import com.ezra.loanbackend.constants.NotificationEventType;
 import com.ezra.loanbackend.domain.RepaymentAllocation;
-import com.ezra.loanbackend.domain.RepaymentChannel;
+import com.ezra.loanbackend.constants.RepaymentChannel;
+import com.ezra.loanbackend.exceptions.LoanException;
 import com.ezra.loanbackend.notification.LoanNotificationPublisher;
 import com.ezra.loanbackend.repository.LoanInstallmentRepository;
 import com.ezra.loanbackend.repository.LoanRepaymentRepository;
@@ -44,12 +45,12 @@ public class RepaymentService {
             RepaymentChannel channel,
             String externalReference) {
         Loan loan = loanRepository.findById(loanId)
-                .orElseThrow(() -> new IllegalArgumentException("Loan not found: " + loanId));
+                .orElseThrow(() -> LoanException.notFound("Loan not found: " + loanId));
         if (loan.getState() != LoanState.OPEN && loan.getState() != LoanState.OVERDUE) {
-            throw new IllegalStateException("Loan is not repayable in state " + loan.getState());
+            throw LoanException.conflict("Loan is not repayable in state " + loan.getState());
         }
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw LoanException.badRequest("Amount must be positive");
         }
 
         LoanRepayment repayment = LoanRepayment.builder()
