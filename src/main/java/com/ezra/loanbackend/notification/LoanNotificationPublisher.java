@@ -9,8 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,21 +20,20 @@ public class LoanNotificationPublisher {
     @Async("notificationExecutor")
     public void publish(NotificationEventType eventType, Long customerId, Loan loan) {
         try {
-            Map<String, Object> payload = new HashMap<>();
-            if (loan != null) {
-                payload.put("outstandingBalance", loan.getOutstandingBalance());
-                if (loan.getDueDate() != null) {
-                    payload.put("dueDate", loan.getDueDate().toString());
-                }
-                payload.put("state", loan.getState().name());
-            }
-            LoanNotificationMessage message = new LoanNotificationMessage(
+            LoanNotificationMessage.Notification notification = new LoanNotificationMessage.Notification(
                     eventType.name(),
-                    customerId,
                     loan != null ? loan.getId() : null,
                     loan != null ? loan.getProductId() : null,
-                    payload,
-                    Instant.now().toString());
+                    loan != null ? loan.getState().name() : null,
+                    loan != null ? loan.getOutstandingBalance() : null,
+                    loan != null && loan.getDueDate() != null ? loan.getDueDate().toString() : null
+            );
+            LoanNotificationMessage message = new LoanNotificationMessage(
+                    "loan-backend",
+                    UUID.randomUUID().toString(),
+                    Instant.now().toString(),
+                    notification,
+                    new LoanNotificationMessage.Customer(customerId));
 
             String loanNotificationBinder = "loan-notifications-out-0";
             streamBridge.send(loanNotificationBinder, message);

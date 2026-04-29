@@ -1,6 +1,6 @@
 package com.ezra.loanbackend.service.schedule;
 
-import com.ezra.loanbackend.domain.OriginatedProductTerms;
+import com.ezra.loanbackend.domain.OriginatedProduct;
 import com.ezra.loanbackend.constants.TenureType;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +13,7 @@ class LoanScheduleCalculatorTest {
 
     @Test
     void maturityDate_addsDays() {
-        OriginatedProductTerms p = OriginatedProductTerms.builder()
+        OriginatedProduct p = OriginatedProduct.builder()
                 .tenureType(TenureType.DAYS)
                 .tenureValue(30)
                 .fixedTerm(true)
@@ -24,7 +24,7 @@ class LoanScheduleCalculatorTest {
 
     @Test
     void equalMonthlyInstallments_splitsPrincipal() {
-        OriginatedProductTerms p = OriginatedProductTerms.builder()
+        OriginatedProduct p = OriginatedProduct.builder()
                 .tenureType(TenureType.MONTHS)
                 .tenureValue(12)
                 .fixedTerm(true)

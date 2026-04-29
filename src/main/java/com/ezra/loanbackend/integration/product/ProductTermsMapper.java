@@ -1,14 +1,14 @@
 package com.ezra.loanbackend.integration.product;
 
-import com.ezra.loanbackend.domain.OriginatedProductTerms;
+import com.ezra.loanbackend.domain.OriginatedProduct;
 
 public final class ProductTermsMapper {
 
     private ProductTermsMapper() {
     }
 
-    public static OriginatedProductTerms fromRemote(Product product) {
-        return OriginatedProductTerms.builder()
+    public static OriginatedProduct fromRemote(Product product) {
+        return OriginatedProduct.builder()
                 .tenureType(product.tenureType())
                 .tenureValue(product.tenureValue())
                 .fixedTerm(product.fixedTerm())

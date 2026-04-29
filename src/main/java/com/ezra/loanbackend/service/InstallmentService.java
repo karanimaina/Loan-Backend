@@ -23,7 +23,7 @@ public class InstallmentService {
         if (loan.getLoanStructure() != LoanStructure.INSTALLMENT) {
             return List.of();
         }
-        var terms = loan.getOriginatedProductTerms();
+        var terms = loan.getOriginatedProduct();
         List<LoanScheduleCalculator.InstallmentDraft> drafts = LoanScheduleCalculator.equalMonthlyInstallments(
                 loan.getDisbursementDate(),
                 loan.getPrincipalAmount(),

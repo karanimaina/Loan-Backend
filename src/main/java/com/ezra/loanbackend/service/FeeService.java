@@ -131,10 +131,10 @@ public class FeeService {
     }
 
     private static ProductFeeConfiguration feeConfig(Loan loan) {
-        if (loan.getOriginatedProductTerms() == null) {
+        if (loan.getOriginatedProduct() == null) {
             return null;
         }
-        return loan.getOriginatedProductTerms().getFeeConfiguration();
+        return loan.getOriginatedProduct().getFeeConfiguration();
     }
 
     private static BigDecimal computeServiceFeeAmount(BigDecimal principal, ProductFeeConfiguration cfg) {

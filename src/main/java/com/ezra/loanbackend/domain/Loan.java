@@ -45,7 +45,7 @@ public class Loan {
     private Long productId;
 
     @Embedded
-    private OriginatedProductTerms originatedProductTerms;
+    private OriginatedProduct originatedProduct;
 
     @Column(precision = 19, scale = 4, nullable = false)
     private BigDecimal principalAmount;

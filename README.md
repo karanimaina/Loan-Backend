@@ -2,7 +2,16 @@
 
 Loan domain service responsible for loan origination, repayment, fees, state transitions, and integration exposure endpoints.
 
-## Prerequisites
+## Table of Contents
+- Setup
+- Architecture and Process Flow
+- Entity Mapping
+- API Endpoints
+- Sample Requests and Responses
+- Swagger / OpenAPI
+- Run and Verify
+
+## Setup
 
 - Java 17+
 - Maven 3.9+ (`./mvnw` included)
@@ -10,17 +19,16 @@ Loan domain service responsible for loan origination, repayment, fees, state tra
 - Product Service running (unless `loan.integration.stub=true`)
 - Kafka broker for notifications
 
-## Run
+Key config in `src/main/resources/application.yml`:
 
-```bash
-./mvnw spring-boot:run
-```
+- `loan.integration.customer-service-base-url`
+- `loan.integration.customer-by-id-path`
+- `loan.integration.product-service-base-url`
+- `loan.integration.product-by-id-path`
+- `loan.integration.stub`
+- `spring.cloud.stream.bindings.loan-notifications-out-0.destination`
 
-- Health: `http://localhost:8080/actuator/health`
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-
-## End-to-end Process Flow
+## Architecture and Process Flow
 
 ### 1) Originate Loan
 1. Client calls `POST /api/v1/loans/create`
@@ -47,9 +55,41 @@ Loan domain service responsible for loan origination, repayment, fees, state tra
 3. Write-off sweep marks long-overdue loans as written off
 4. Relevant notifications are published asynchronously
 
+## Entity Mapping
+
+Core persistent entities and what they represent:
+
+- `Loan`: primary loan aggregate (state, balances, due date, structure, links to customer/product IDs)
+- `OriginatedProductTerms`: embedded product snapshot at origination time
+- `LoanInstallment`: schedule rows for installment-based loans
+- `LoanRepayment`: repayment records
+- `RepaymentAllocation`: allocation of repayment amount to loan/installment
+- `LoanFeeCharge`: service/daily/late fee charges applied to a loan
+- `LoanStateHistory`: loan lifecycle trail (OPEN, OVERDUE, CLOSED, etc.)
+- `ConsolidatedBillingGroup`: optional grouping for consolidated billing dates
+
+## API Endpoints
+
+### Loan endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/loans/create` | Originate loan |
+| GET | `/api/v1/loans/{id}` | Get loan details |
+| POST | `/api/v1/loans/{id}/cancel` | Cancel loan |
+| POST | `/api/loans/{loanId}/repayments` | Record repayment |
+
+### Integration endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/integration/v1/customers/{customerId}/exposure` | Customer loan exposure summary |
+| GET | `/api/integration/v1/customers/{customerId}/loans` | Customer loan list summary |
+| GET | `/api/integration/v1/products/{productId}/active-loans/count` | Active loans count by product |
+
 ## Sample Requests and Responses
 
-All API responses use:
+All responses are wrapped in:
 
 ```json
 {
@@ -59,11 +99,9 @@ All API responses use:
 }
 ```
 
-### A) Create Loan
+### Create Loan
 
-**Request**
-
-`POST /api/v1/loans/create`
+**Request** `POST /api/v1/loans/create`
 
 ```json
 {
@@ -102,11 +140,9 @@ All API responses use:
 }
 ```
 
-### B) Get Loan by ID
+### Get Loan
 
-**Request**
-
-`GET /api/v1/loans/10`
+**Request** `GET /api/v1/loans/10`
 
 **Response**
 
@@ -131,11 +167,9 @@ All API responses use:
 }
 ```
 
-### C) Cancel Loan
+### Cancel Loan
 
-**Request**
-
-`POST /api/v1/loans/10/cancel`
+**Request** `POST /api/v1/loans/10/cancel`
 
 ```json
 {
@@ -157,11 +191,9 @@ All API responses use:
 }
 ```
 
-### D) Record Repayment
+### Record Repayment
 
-**Request**
-
-`POST /api/loans/10/repayments`
+**Request** `POST /api/loans/10/repayments`
 
 ```json
 {
@@ -189,11 +221,9 @@ All API responses use:
 }
 ```
 
-### E) Integration Endpoint: Customer Exposure
+### Customer Exposure
 
-**Request**
-
-`GET /api/integration/v1/customers/1/exposure`
+**Request** `GET /api/integration/v1/customers/1/exposure`
 
 **Response**
 
@@ -209,9 +239,7 @@ All API responses use:
 }
 ```
 
-## Common Error Responses
-
-### Validation / Business Rule Error
+### Common Error Responses
 
 ```json
 {
@@ -221,8 +249,6 @@ All API responses use:
 }
 ```
 
-### Not Found
-
 ```json
 {
   "status": 404,
@@ -230,8 +256,6 @@ All API responses use:
   "data": null
 }
 ```
-
-### Unexpected Error
 
 ```json
 {
@@ -241,18 +265,26 @@ All API responses use:
 }
 ```
 
-## Integration Configuration
+## Swagger / OpenAPI
 
-Key config in `src/main/resources/application.yml`:
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
-- `loan.integration.customer-service-base-url`
-- `loan.integration.customer-by-id-path`
-- `loan.integration.product-service-base-url`
-- `loan.integration.product-by-id-path`
-- `loan.integration.stub`
-- `spring.cloud.stream.bindings.loan-notifications-out-0.destination`
+## Run and Verify
 
-## Tests
+### Start service
+
+```bash
+./mvnw spring-boot:run
+```
+
+### Verify
+
+- Health: `http://localhost:8080/actuator/health`
+- Swagger UI loads and lists endpoints
+- Sample create-loan request returns `UniversalResponse`
+
+### Run tests
 
 ```bash
 ./mvnw test

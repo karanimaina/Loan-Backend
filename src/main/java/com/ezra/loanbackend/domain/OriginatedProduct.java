@@ -18,7 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OriginatedProductTerms {
+public class OriginatedProduct {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "product_tenure_type", length = 16)

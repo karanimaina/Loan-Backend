@@ -1,6 +1,6 @@
 package com.ezra.loanbackend.service.schedule;
 
-import com.ezra.loanbackend.domain.OriginatedProductTerms;
+import com.ezra.loanbackend.domain.OriginatedProduct;
 import com.ezra.loanbackend.constants.TenureType;
 
 import java.math.BigDecimal;
@@ -14,14 +14,14 @@ public final class LoanScheduleCalculator {
     private LoanScheduleCalculator() {
     }
 
-    public static LocalDate maturityDate(LocalDate disbursement, OriginatedProductTerms terms) {
+    public static LocalDate maturityDate(LocalDate disbursement, OriginatedProduct terms) {
         if (terms.getTenureType() == TenureType.DAYS) {
             return disbursement.plusDays(terms.getTenureValue());
         }
         return disbursement.plusMonths(terms.getTenureValue());
     }
 
-    public static int installmentCount(OriginatedProductTerms terms) {
+    public static int installmentCount(OriginatedProduct terms) {
         if (terms.getNumberOfInstallments() != null && terms.getNumberOfInstallments() > 0) {
             return terms.getNumberOfInstallments();
         }
@@ -34,7 +34,7 @@ public final class LoanScheduleCalculator {
     public static List<InstallmentDraft> equalMonthlyInstallments(
             LocalDate disbursement,
             BigDecimal principal,
-            OriginatedProductTerms terms) {
+            OriginatedProduct terms) {
         int n = installmentCount(terms);
         BigDecimal each = principal.divide(BigDecimal.valueOf(n), 4, RoundingMode.HALF_UP);
         List<InstallmentDraft> drafts = new ArrayList<>();

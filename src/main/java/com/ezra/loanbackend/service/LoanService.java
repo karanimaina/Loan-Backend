@@ -4,7 +4,7 @@ import com.ezra.loanbackend.constants.*;
 import com.ezra.loanbackend.domain.ConsolidatedBillingGroup;
 import com.ezra.loanbackend.domain.Loan;
 import com.ezra.loanbackend.domain.LoanInstallment;
-import com.ezra.loanbackend.domain.OriginatedProductTerms;
+import com.ezra.loanbackend.domain.OriginatedProduct;
 import com.ezra.loanbackend.integration.customer.Customer;
 import com.ezra.loanbackend.integration.customer.CustomerService;
 import com.ezra.loanbackend.integration.product.Product;
@@ -67,7 +67,7 @@ public class LoanService {
             throw LoanException.conflict("Principal exceeds customer loan limit");
         }
 
-        OriginatedProductTerms terms = ProductTermsMapper.fromRemote(product);
+        OriginatedProduct terms = ProductTermsMapper.fromRemote(product);
 
         ConsolidatedBillingGroup group = null;
         if (billingCycleType == BillingCycleType.CONSOLIDATED) {
@@ -101,7 +101,7 @@ public class LoanService {
         Loan toSave = Loan.builder()
                 .customerId(customerId)
                 .productId(productId)
-                .originatedProductTerms(terms)
+                .originatedProduct(terms)
                 .principalAmount(principalAmount)
                 .outstandingBalance(principalAmount)
                 .disbursementDate(disbursementDate)

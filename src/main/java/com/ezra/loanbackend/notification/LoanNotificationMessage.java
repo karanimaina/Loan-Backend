@@ -1,12 +1,24 @@
 package com.ezra.loanbackend.notification;
 
-import java.util.Map;
+import java.math.BigDecimal;
+
 public record LoanNotificationMessage(
-        String eventType,
-        Long customerId,
-        Long loanId,
-        Long productId,
-        Map<String, Object> payload,
-        String occurredAt
+        String source,
+        String eventId,
+        String eventTime,
+        Notification notification,
+        Customer customer
 ) {
+    public record Notification(
+            String type,
+            Long loanId,
+            Long productId,
+            String state,
+            BigDecimal outstandingBalance,
+            String dueDate
+    ) {
+    }
+
+    public record Customer(Long id) {
+    }
 }
